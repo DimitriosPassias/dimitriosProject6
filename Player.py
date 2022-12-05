@@ -1,0 +1,61 @@
+import arcade
+
+RIGHT_FACING = 0
+LEFT_FACING = 1
+UP_FACING = 2
+DOWN_FACING = 3
+CHARACTER_SCALING = 1
+
+class Player(arcade.AnimatedWalkingSprite):
+    def __init__(self):
+        super().__init__()
+
+        # Default to face-right
+        self.character_face_direction = RIGHT_FACING
+
+        # Used for flipping between image sequences
+        self.cur_texture = 0
+
+        self.scale = CHARACTER_SCALING
+
+        # Adjust the collision box. Default includes too much empty space
+        # side-to-side. Box is centered at sprite center, (0, 0)
+        self.points = [[-22, -64], [22, -64], [22, 28], [-22, 28]]
+
+        # --- Load Textures ---
+
+        # Images from Kenney.nl's Asset Pack 3
+        main_path = "batman_up_stand.jpg"
+
+
+        # Load textures for idle standing
+        self.idle_texture = arcade.load_texture(main_path)
+
+        # Load textures for walking
+        self.walk_textures = []
+        for i in range(8):
+            texture = [arcade.load_texture(""),
+                       arcade.load_texture("")
+            ]
+            self.walk_textures.append(texture)
+
+    def update_animation(self, delta_time: float = 1 / 60):
+
+        # Figure out if we need to flip face left or right
+        if self.change_x < 0 and self.character_face_direction == RIGHT_FACING:
+            self.character_face_direction = LEFT_FACING
+        elif self.change_x > 0 and self.character_face_direction == LEFT_FACING:
+            self.character_face_direction = RIGHT_FACING
+
+        # Idle animation
+        if self.change_x == 0 and self.change_y == 0:
+            self.texture = self.idle_texture_pair[self.character_face_direction]
+            return
+
+        # Walking animation
+        self.cur_texture += 1
+        if self.cur_texture > 7 * 5:
+            self.cur_texture = 0
+        frame = self.cur_texture // 5
+        direction = self.character_face_direction
+        self.texture = self.walk_textures[frame][direction]
