@@ -1,6 +1,3 @@
-#Extra Credit: Three Lives, Two Types of Entities
-#just run the main and make sure to have the textures added.
-#Issues: Spawning Entites over certain time point but i got certain amount of entities on screen at a time so it automatically loads another after one dies basically.
 import arcade
 import random
 from Criminal import Criminal
