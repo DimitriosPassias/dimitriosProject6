@@ -32,12 +32,12 @@ class Player(arcade.AnimatedWalkingSprite):
         self.idle_texture = arcade.load_texture(main_path)
 
         # Load textures for walking
-        self.walk_textures = []
-        for i in range(8):
-            texture = [arcade.load_texture(""),
-                       arcade.load_texture("")
-            ]
-            self.walk_textures.append(texture)
+        #self.walk_textures = []
+        #for i in range(8):
+         #   texture = [arcade.load_texture(""),
+          #             arcade.load_texture("")
+          #  ]
+           # self.walk_textures.append(texture)
 
     def update_animation(self, delta_time: float = 1 / 60):
 
@@ -48,14 +48,14 @@ class Player(arcade.AnimatedWalkingSprite):
             self.character_face_direction = RIGHT_FACING
 
         # Idle animation
-        if self.change_x == 0 and self.change_y == 0:
-            self.texture = self.idle_texture_pair[self.character_face_direction]
-            return
+        #if self.change_x == 0 and self.change_y == 0:
+        #    self.texture = self.idle_texture_pair[self.character_face_direction]
+        #    return
 
         # Walking animation
-        self.cur_texture += 1
-        if self.cur_texture > 7 * 5:
-            self.cur_texture = 0
-        frame = self.cur_texture // 5
-        direction = self.character_face_direction
-        self.texture = self.walk_textures[frame][direction]
+        #   self.cur_texture += 1
+        #if self.cur_texture > 7 * 5:
+        #self.cur_texture = 0
+        #frame = self.cur_texture // 5
+        #direction = self.character_face_direction
+        #self.texture = self.walk_textures[frame][direction]

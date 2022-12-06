@@ -1,8 +1,12 @@
+#Extra Credit: Three Lives, Two Types of Entities
+#just run the main and make sure to have the textures added.
+#Issues: Spawning Entites over certain time point but i got certain amount of entities on screen at a time so it automatically loads another after one dies basically.
 import arcade
 import random
 from Criminal import Criminal
 from PauseView import PauseView
 from GameOver import GameOver
+from TwoFace import TwoFace
 
 MAX_SPEED = 3.0
 ACCELERATION_RATE = 0.1
@@ -16,6 +20,7 @@ class GameView(arcade.View):
     def __init__(self):
         super().__init__()
         self.player = None
+
         self.targets = arcade.SpriteList()
         self.score = 0
         self.background= None
@@ -32,6 +37,7 @@ class GameView(arcade.View):
         self.enemy_textures = None
         self.total_time=0.0
 
+
         self.window.set_mouse_visible(False)
 
         self.gun_sound = arcade.load_sound(":resources:sounds/hurt5.wav")
@@ -47,19 +53,22 @@ class GameView(arcade.View):
     def setup(self):
         self.hurt_sound = arcade.load_sound("bathit.mp3")
         self.death_sound= arcade.load_sound("death.mp3")
+        self.player_lives = 3
         self.player_list = arcade.SpriteList()
         self.player_ammo_list = arcade.SpriteList()
         self.enemy_bullet_list = arcade.SpriteList()
         self.background = arcade.load_texture("background.jpg")
         self.player = arcade.Sprite("batman.png", 1, 106, 0, 29, 48)
 
+        TOTAL_SCORE = 0
         self.score = 0
         self.player.center_x = 64
         self.player.center_y = 128
 
         self.player_list.append(self.player)
         for number in range(6):
-            criminal = arcade.Sprite("criminal.png", 1, 227, 0, 27, 32)
+            criminal = Criminal("criminal.png")
+            criminal.health = 1
             self.targets.append(criminal)
             criminal.center_x = random.randint(16, 1184)
             criminal.center_y = 880
@@ -71,6 +80,7 @@ class GameView(arcade.View):
         self.player_list.update_animation()
         self.player_ammo_list.update()
         TOTAL_SCORE = self.score
+        self.total_time += delta_time
 
         if self.player.change_x > FRICTION:
             self.player.change_x -= FRICTION
@@ -113,10 +123,21 @@ class GameView(arcade.View):
                 arcade.play_sound(self.hurt_sound)
             if batarang.bottom > 900:
                 batarang.remove_from_sprite_lists()
+        #adds score if you hit a criminal
             for criminal in hit_list:
-                criminal.remove_from_sprite_lists()
-                self.score +=1
-                self.window.total_score +=1
+                if isinstance(criminal, TwoFace):
+                    if criminal.health > 0:
+                        criminal.health -= 1
+                    else:
+                        criminal.kill()
+                        self.score += 5
+                        self.window.total_score += 5
+                else:
+                    criminal.kill()
+                    self.score +=1
+                    self.window.total_score +=1
+
+
 
         #sets the criminals to go towards player
         for criminal in self.targets:
@@ -128,26 +149,41 @@ class GameView(arcade.View):
         if self.player.center_y > 900:
             self.player.center_y = 0
 
-        #end game if user gets coins or gets hit
+        #end game if user gets coins or gets hit and plays sound if hit
         if arcade.check_for_collision_with_list(self.player, self.targets):
-            arcade.play_sound(self.)
-            view = GameOver()
-            self.window.show_view(view)
-        if self.window.total_score == 20:
+            if(self.player_lives>0):
+                self.player_lives -=1
+                self.player.center_x = 400
+                self.player.center_y = 10
+            elif(self.player_lives == 0):
+                arcade.play_sound(arcade.load_sound("death.mp3"))
+                view = GameOver()
+                self.window.show_view(view)
+        elif self.window.total_score >= 20:
             view = GameOver()
             self.window.show_view(view)
 
-        self.total_time=delta_time
 
-        while len(self.targets) <= 5:
-            for number in range(5):
-                criminal = arcade.Sprite("criminal.png", 1, 227, 0, 27, 32)
-                self.targets.append(criminal)
-                criminal.center_x = random.randint(16, 1184)
-                criminal.center_y = 880
+        #if there is less then 5 targets on the screen displaying criminals
+        if self.targets.__len__() <5:
+            while self.targets.__len__() == 4:
+                    twoface = TwoFace("twoface.jpg")
+                    self.targets.append(twoface)
+                    twoface.center_x = random.randint(16, 1184)
+                    twoface.center_y = 880
+
+            criminal = Criminal("criminal.png")
+            self.targets.append(criminal)
+            criminal.center_x = random.randint(16, 1184)
+            criminal.center_y = 880
+                    # Draws amount of lives
+
+
+
 
     def on_draw(self):
         #starts render and draws objects
+        self.clear()
         arcade.start_render()
         arcade.draw_lrwh_rectangle_textured(0, 0,1820, 900,self.background)
         self.player_list.draw()
@@ -155,11 +191,16 @@ class GameView(arcade.View):
         self.player_ammo_list.draw()
 
         #Draws Score
-        output = f"BatPoints: {self.score}"
+        output = f"Bat-Points: {self.score}"
         arcade.draw_text(output, 10, 870, arcade.color.YELLOW)
+        output = f"Bat-Lives: {self.player_lives}"
+        arcade.draw_text(output, 10, 840, arcade.color.RED_DEVIL)
+
+
+
 
     def on_key_press(self, key, modifiers):
-        #Movement for the keys
+        #Movement for the player both right handed and left handed
         if key == arcade.key.UP or key == arcade.key.W:
             self.up_pressed = True
         elif key == arcade.key.DOWN or key == arcade.key.S:
@@ -173,6 +214,7 @@ class GameView(arcade.View):
             self.window.show_view(pause)
 
     def on_key_release(self, key, modifiers):
+        #resets the players movement to stop the player
         if key == arcade.key.UP or key == arcade.key.W:
             self.up_pressed = False
         elif key == arcade.key.DOWN or key == arcade.key.S:
@@ -183,7 +225,7 @@ class GameView(arcade.View):
             self.right_pressed = False
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
-
+        #throws batarang but limited to 5 on screen
         if len(self.player_ammo_list) < 5:
             arcade.play_sound(self.batarang_sound)
 
